@@ -34,28 +34,26 @@ public class Main {
   public static void main (String[] args) {
     Map<String, List<Student>> map = readAFile("input-for-tut-6-3.txt");
 
-    System.out.println(map);
+    String output = map.entrySet()
+      .stream()
+      .map(entry -> "Group " + entry.getKey() + ": " + entry.getValue().toString())
+      .collect(Collectors.joining("\n"));
+
+    System.out.println(output);
   }
 
   public static Map<String, List<Student>> readAFile (String filename) {
     BufferedReader reader;
     List<String> list = new ArrayList<String>();
-    Map<String, List<Student>> map = new HashMap<>(){
-      @Override
-      public String toString () {
-        return this.entrySet()
-          .stream()
-          .map(entry -> "Group " + entry.getKey() + ": " + entry.getValue().toString())
-          .collect(Collectors.joining("\n"));
-      }
-    };
+    Map<String, List<Student>> map = null;
 
     try {
       reader = new BufferedReader(new FileReader(filename));
 
-      reader
+      map = reader
         .lines()
-        .forEach(line -> parseLine(line, map));
+        .map(Main::parseLine)
+        .collect(Collectors.groupingBy(Student::getGroupId));
 
       reader.close();
     } catch (IOException e) {
@@ -65,7 +63,7 @@ public class Main {
     return map;
   }
 
-  public static void parseLine (String line, Map<String, List<Student>> map)  {
+  public static Student parseLine (String line)  {
     String pattern = "^(?<name>\\w+)\\s+(?<group>\\d{2}\\w)\\s+(?<score>\\d{1,3})$";
 
     Matcher m = Pattern
@@ -79,21 +77,14 @@ public class Main {
 
     int scoreInt = Integer.parseInt(score);
 
-    Student currentStudent = new Student(name, groupId, scoreInt);
-
-    List<Student> group = map.getOrDefault(
-      groupId,
-      new ArrayList<Student>()
-    );
-    group.add(currentStudent);
-    map.put(groupId, group);
+    return new Student(name, groupId, scoreInt);
   }
 }
 
 class Student {
-  String name;
-  String groupId;
-  int score;
+  private String name;
+  private String groupId;
+  private int score;
 
   Student (String name, String groupId, int score) {
     this.name = name;
@@ -104,5 +95,9 @@ class Student {
   @Override
   public String toString () {
     return this.name + "(" + this.groupId + ")"+ "-" + this.score;
+  }
+
+  public String getGroupId () {
+    return this.groupId;
   }
 }
