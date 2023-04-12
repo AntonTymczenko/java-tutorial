@@ -31,14 +31,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Main {
-	public static void main (String[] args) {
+  public static void main (String[] args) {
     Map<String, List<Student>> map = readAFile("input-for-tut-6-3.txt");
 
     System.out.println(map);
   }
 
-	public static Map<String, List<Student>> readAFile (String filename) {
-		BufferedReader reader;
+  public static Map<String, List<Student>> readAFile (String filename) {
+    BufferedReader reader;
     List<String> list = new ArrayList<String>();
     Map<String, List<Student>> map = new HashMap<>(){
       @Override
@@ -50,20 +50,20 @@ public class Main {
       }
     };
 
-		try {
-			reader = new BufferedReader(new FileReader(filename));
+    try {
+      reader = new BufferedReader(new FileReader(filename));
 
       reader
         .lines()
         .forEach(line -> parseLine(line, map));
 
-			reader.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+      reader.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
     return map;
-	}
+  }
 
   public static void parseLine (String line, Map<String, List<Student>> map)  {
     String pattern = "^(?<name>\\w+)\\s+(?<group>\\d{2}\\w)\\s+(?<score>\\d{1,3})$";
