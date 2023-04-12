@@ -25,7 +25,8 @@
 import java.util.*;
 import java.util.stream.*;
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,18 +44,14 @@ public class Main {
   }
 
   public static Map<String, List<Student>> readAFile (String filename) {
-    BufferedReader reader;
     Map<String, List<Student>> map = new HashMap<>();
 
-    try {
-      reader = new BufferedReader(new FileReader(filename));
-
-      map = reader
-        .lines()
+    try (
+      Stream<String> lines = Files.lines(Paths.get(filename));
+    ) {
+      map = lines
         .map(Main::parseLine)
         .collect(Collectors.groupingBy(Student::getGroupId));
-
-      reader.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
