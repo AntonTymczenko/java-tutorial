@@ -2,24 +2,24 @@
  * Write a program which reads a file containing an unknown number of lines
  * which look like this
 
-    Mary 12c 78
-    Jane 12c 90
-    Bill 13c 68
-    Kate 12c 76
-    John 13c 66
+  Mary 12c 78
+  Jane 12c 90
+  Bill 13c 68
+  Kate 12c 76
+  John 13c 66
 
-  * Each line corresponds to a student with a given name, group id and test score.
-  *
-  * Using streams, create a map with group ids as keys and list of students
-  * belonging to a given group as values; print these lists.
-  *
-  * Assuming that toString method in class Student is appropriately implemented,
-  * the output could be something like
+ * Each line corresponds to a student with a given name, group id and test score.
+ *
+ * Using streams, create a map with group ids as keys and list of students
+ * belonging to a given group as values; print these lists.
+ *
+ * Assuming that toString method in class Student is appropriately implemented,
+ * the output could be something like
 
-    Group 13c: [Bill(13c)-68, John(13c)-66]
-    Group 12c: [Mary(12c)-78, Jane(12c)-90, Kate(12c)-76]
-  *
-  * Important: Do not use explicit loops!
+   Group 13c: [Bill(13c)-68, John(13c)-66]
+   Group 12c: [Mary(12c)-78, Jane(12c)-90, Kate(12c)-76]
+ *
+ * Important: Do not use explicit loops!
  */
 
 import java.util.*;
