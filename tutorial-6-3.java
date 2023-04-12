@@ -23,6 +23,7 @@
  */
 
 import java.util.*;
+import java.util.stream.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -42,49 +43,19 @@ public class Main {
     Map<String, List<Student>> map = new HashMap<>(){
       @Override
       public String toString () {
-        String res = "";
-
-
-        Iterator<String> keys = this.keySet().iterator();
-        while (keys.hasNext()) {
-          String key = keys.next();
-          res = res.concat("Group " + key + ": "
-            + this.get(key).toString()
-            + (keys.hasNext() ? "\n" : ""));
-        }
-
-        return res;
+        return this.entrySet()
+          .stream()
+          .map(entry -> "Group " + entry.getKey() + ": " + entry.getValue().toString())
+          .collect(Collectors.joining("\n"));
       }
     };
-    String pattern = "^(?<name>\\w+)\\s+(?<group>\\d{2}\\w)\\s+(?<score>\\d{1,3})$";
 
 		try {
 			reader = new BufferedReader(new FileReader(filename));
-			String line = reader.readLine();
 
-			while (line != null) {
-        Matcher m = Pattern
-          .compile(pattern)
-          .matcher(line);
-
-        m.find();
-        String name = m.group("name");
-        String groupId = m.group("group");
-        String score = m.group("score");
-
-        int scoreInt = Integer.parseInt(score);
-
-        Student currentStudent = new Student(name, groupId, scoreInt);
-
-        List<Student> group = map.getOrDefault(
-          groupId,
-          new ArrayList<Student>()
-        );
-        group.add(currentStudent);
-        map.put(groupId, group);
-
-				line = reader.readLine();
-			}
+      reader
+        .lines()
+        .forEach(line -> parseLine(line, map));
 
 			reader.close();
 		} catch (IOException e) {
@@ -93,6 +64,30 @@ public class Main {
 
     return map;
 	}
+
+  public static void parseLine (String line, Map<String, List<Student>> map)  {
+    String pattern = "^(?<name>\\w+)\\s+(?<group>\\d{2}\\w)\\s+(?<score>\\d{1,3})$";
+
+    Matcher m = Pattern
+      .compile(pattern)
+      .matcher(line);
+
+    m.find();
+    String name = m.group("name");
+    String groupId = m.group("group");
+    String score = m.group("score");
+
+    int scoreInt = Integer.parseInt(score);
+
+    Student currentStudent = new Student(name, groupId, scoreInt);
+
+    List<Student> group = map.getOrDefault(
+      groupId,
+      new ArrayList<Student>()
+    );
+    group.add(currentStudent);
+    map.put(groupId, group);
+  }
 }
 
 class Student {
