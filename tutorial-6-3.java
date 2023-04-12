@@ -44,7 +44,6 @@ public class Main {
 
   public static Map<String, List<Student>> readAFile (String filename) {
     BufferedReader reader;
-    List<String> list = new ArrayList<String>();
     Map<String, List<Student>> map = null;
 
     try {
