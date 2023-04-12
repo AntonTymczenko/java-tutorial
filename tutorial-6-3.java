@@ -33,14 +33,13 @@ import java.util.regex.Pattern;
 
 public class Main {
   public static void main (String[] args) {
-    Map<String, List<Student>> map = readAFile("input-for-tut-6-3.txt");
-
-    String output = map.entrySet()
-      .stream()
-      .map(entry -> "Group " + entry.getKey() + ": " + entry.getValue().toString())
-      .collect(Collectors.joining("\n"));
-
-    System.out.println(output);
+    System.out.println(
+      readAFile("input-for-tut-6-3.txt")
+        .entrySet()
+        .stream()
+        .map(entry -> "Group " + entry.getKey() + ": " + entry.getValue().toString())
+        .collect(Collectors.joining("\n"))
+    );
   }
 
   public static Map<String, List<Student>> readAFile (String filename) {
