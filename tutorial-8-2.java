@@ -57,12 +57,10 @@ public class Main {
 }
 
 class Letters {
-  int length = 0;
   int suspendedIndex = -1;
   Letter[] threads;
 
   public Letters (String s) {
-    this.length = s.length();
     this.threads = new Letter[s.length()];
     for (int i = 0; i < s.length(); i++) {
       char c = s.charAt(i);
@@ -84,7 +82,7 @@ class Letters {
   }
 
   public void switchSuspendedLetter () {
-    int index = (this.suspendedIndex + 1) % this.length;
+    int index = (this.suspendedIndex + 1) % this.threads.length;
     Letter curr = this.threads[index];
 
     if (this.suspendedIndex > -1) {
