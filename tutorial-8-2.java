@@ -40,8 +40,6 @@ of one line only.
  */
 
 
-import java.util.*;
-
 public class Main {
   public static void main(String[] args) {
     String lettersString = "abcde";
@@ -61,13 +59,14 @@ public class Main {
 class Letters {
   int length = 0;
   int suspendedIndex = -1;
-  ArrayList<Letter> threads;
+  Letter[] threads;
 
   public Letters (String s) {
     this.length = s.length();
-    this.threads = new ArrayList<Letter>();
-    for (char c: s.toCharArray()) {
-      this.threads.add(new Letter(c) );
+    this.threads = new Letter[s.length()];
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      this.threads[i] = new Letter(c);
     }
   }
 
@@ -86,10 +85,10 @@ class Letters {
 
   public void switchSuspendedLetter () {
     int index = (this.suspendedIndex + 1) % this.length;
-    Letter curr = this.threads.get(index);
+    Letter curr = this.threads[index];
 
     if (this.suspendedIndex > -1) {
-      Letter prev = this.threads.get(this.suspendedIndex);
+      Letter prev = this.threads[this.suspendedIndex];
       System.out.print("\nResuming " + prev.getName()
         + ", suspending " + curr.getName() + ": ");
       prev.setSuspended(false);
