@@ -19,10 +19,18 @@ import java.util.regex.Pattern;
 
 public class DiffLettWords {
   public static void main(String[] args) {
-    boolean WITH_UTF8 = true;
-    String book = WITH_UTF8
+    process(true);
+    process(false);
+  }
+
+  public static void process(boolean withUtf8) {
+    String book = withUtf8
       ? "schultz_sklepy_cynamonowe_UTF8.txt"
       : "melville_moby_dick.txt";
+    int HOW_MANY_LISTS_TO_PRINT = 3;
+
+    System.out.println("\nProcessing with" + (!withUtf8 ? "out" : "")
+      + " UTF-8 characters from file " + book);
 
     int minLen = 5; // ignore words shorter than minLen
     try (Stream<String> lines = Files.lines(Paths.get(book))) {
@@ -50,15 +58,16 @@ public class DiffLettWords {
           .collect(Collectors.groupingBy(String::length));
 
       // just printing
-      List<Integer> lastTwo = map.keySet().stream()
+      List<Integer> lastItems = map.keySet().stream()
               .sorted()
               .collect(Collectors.toList());
-      System.out.println("Two lists of the longest " +
+      int howManyListsToPrint = Math.min(HOW_MANY_LISTS_TO_PRINT, lastItems.size());
+      System.out.println(howManyListsToPrint + " lists of the longest " +
                   "words with all letters different:");
-      int len = lastTwo.get(lastTwo.size() - 2);
-      System.out.println("length " + len + ": " + map.get(len));
-      len = lastTwo.get(lastTwo.size() - 1);
-      System.out.println("length " + len + ": " + map.get(len));
+      for (int i = howManyListsToPrint; i >= 1; i--) {
+        int len = lastItems.get(lastItems.size() - i);
+        System.out.println("length " + len + ": " + map.get(len));
+      }
       /**
        * Expected outputs:
        *
