@@ -34,7 +34,7 @@ public class FallingSquaresGame extends JFrame {
     private static final int GAME_DURATION_SECONDS = 30;
     private static final int SQUARE_SIZE = 40;
     private static final int SQUARE_FALLING_SPEED_PX = 4;
-    private static final double SQUARE_CREATION_INTERVAL_SECONDS = 0.1;
+    private static final int SQUARE_CREATION_INTERVAL_FRAMES = 11;
     private static final int FPS = 60;
     private static final double REQUIRED_WINNING_SCORE_PERCENTAGE = 50.0;
 
@@ -84,16 +84,15 @@ public class FallingSquaresGame extends JFrame {
         totalSquares = 0;
 
         gameTimer = new Timer();
-        gameTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                createNewSquare();
-            }
-        }, 0, (long)(SQUARE_CREATION_INTERVAL_SECONDS * 2000));
 
         gameTimer.schedule(new TimerTask() {
             @Override
             public void run () {
+                int r = getRandomNumber(1, SQUARE_CREATION_INTERVAL_FRAMES);
+                if (r % SQUARE_CREATION_INTERVAL_FRAMES == 0) {
+                    createNewSquare();
+                }
+
                 updateSquarePositions();
                 gamePanel.repaint();
             }
