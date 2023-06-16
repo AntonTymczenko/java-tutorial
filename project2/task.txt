@@ -1,0 +1,27 @@
+Create a JAVA game as described below.
+
+The program displays a window with a panel taking the most part of a window and
+a label at the bottom. The label has a border with a title "Score". The text
+of the label is something like "Current score: 50%". The window is about
+400x450 px in size.
+
+The panel is filled with a color. On the top of that color, in random places,
+there appear squares of contrasting (to the panel background) color. Squares
+fall from the position where they appear downwards. The player has to “kill”
+them by clicking on them before they reach the bottom edge of the panel.
+Squares clicked and squares reaching the bottom edge disappear.
+The current score is constantly shown on the label — this may be the fraction,
+in percents, of the number of squares which have not reached the bottom relative
+to the total number of squares created.
+
+After a prescribed time, for example a minute, the game is over: squares stop
+falling, new ones are not created any more and an appropriate message is shown.
+The message is show in a pop-up window with a button "OK" which closes the app.
+
+What to show in the message - is whether the player lost or won. The player wins
+if the fraction displayed on the label is still higher than a prescribed
+value (say 50%).
+
+Set the parameters of the game, like how frequently new squares are created,
+their speed, time of the game, and the required winning score so the game is
+not too easy but still it is possible to win.

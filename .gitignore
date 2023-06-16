@@ -1,4 +1,6 @@
 **/*.pdf
+**/*.zip
+**/*.png
 **/*.mp4
 CLASS-BOOK.md
 **/.*
