@@ -84,7 +84,7 @@ public class FallingSquaresGame extends JFrame {
             gamePanel.repaint();
 
             try {
-                Thread.sleep(1000);
+                Thread.sleep(SQUARE_FALLING_SPEED);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
