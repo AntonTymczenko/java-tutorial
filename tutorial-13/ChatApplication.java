@@ -15,6 +15,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 
+// run with `javv ChatApplication.java` in the `tutorial-13` dir
+
 
 public class ChatApplication extends Application {
   private String author1 = "Romeo";

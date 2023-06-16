@@ -1,96 +1,107 @@
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class FallingSquaresGame extends JFrame {
 
     private JPanel gamePanel;
     private JLabel scoreLabel;
-    private double score;
+    private List<Square> squares;
     private int totalSquares;
     private int clickedSquares;
-    private Timer gameTimer;
+    private double score;
 
     private static final int WINDOW_WIDTH = 400;
     private static final int WINDOW_HEIGHT = 450;
     private static final int SQUARE_SIZE = 40;
     private static final int SQUARE_FALLING_SPEED = 15;
-    private static final int SQUARE_CREATION_INTERVAL = 1000; // milliseconds
-    private static final int GAME_DURATION = 30000; // milliseconds
+    private static final int SQUARE_CREATION_INTERVAL = 1000; // FIXME
+    private static final int GAME_DURATION_SECONDS = 30;
     private static final double REQUIRED_WINNING_SCORE_PERCENTAGE = 50.0;
 
     public FallingSquaresGame() {
-        super("Falling Squares Game");
-        setLayout(new BorderLayout());
+        setTitle("Falling Squares Game");
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         gamePanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                g.setColor(Color.WHITE);
-                g.fillRect(0, 0, getWidth(), getHeight());
                 for (Square square : squares) {
                     square.draw(g);
                 }
             }
         };
+        gamePanel.setBackground(Color.WHITE);
+        gamePanel.setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
+        getContentPane().add(gamePanel, BorderLayout.CENTER);
 
         scoreLabel = new JLabel("Current score: 0%");
         scoreLabel.setBorder(BorderFactory.createTitledBorder("Score"));
         scoreLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        getContentPane().add(scoreLabel, BorderLayout.SOUTH);
 
-        add(gamePanel, BorderLayout.CENTER);
-        add(scoreLabel, BorderLayout.SOUTH);
+        squares = new ArrayList<>();
+        score = 0.0;
+        clickedSquares = 0;
+        totalSquares = 0;
+
+        gamePanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                handleClick(e.getX(), e.getY());
+            }
+        });
 
         setVisible(true);
 
-        startGame();
+        playGame();
     }
 
-    private List<Square> squares = new ArrayList<>();
+    private void playGame() {
+        long startTime = System.currentTimeMillis();
+        long endTime = startTime + (GAME_DURATION_SECONDS * 1000);
 
-    private void startGame() {
-        score = 0.0;
-        totalSquares = 0;
-        clickedSquares = 0;
+        while (System.currentTimeMillis() < endTime) {
+            createNewSquare();
+            gamePanel.repaint();
 
-        gameTimer = new Timer();
-        gameTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                createSquare();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        }, 0, SQUARE_CREATION_INTERVAL);
+        }
 
-        Timer endTimer = new Timer();
-        endTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                endGame();
-            }
-        }, GAME_DURATION);
+        endGame();
     }
 
-    private void createSquare() {
+    private void createNewSquare() {
         int x = getRandomNumber(0, WINDOW_WIDTH - SQUARE_SIZE);
-        Square square = new Square(x, 0);
-        squares.add(square);
+        Square newSquare = new Square(x, -SQUARE_SIZE);
+        squares.add(newSquare);
         totalSquares++;
-        score = ((double) clickedSquares / totalSquares) * 100.0;
-        scoreLabel.setText("Current score: " + String.format("%.0f", score) + "%");
-        gamePanel.repaint();
+        updateScore();
     }
 
     private void endGame() {
-        gameTimer.cancel();
         String message;
         if (score >= REQUIRED_WINNING_SCORE_PERCENTAGE) {
             message = "Congratulations! You won!\nYour result is " + String.format("%.0f", score) + "%";
@@ -116,20 +127,10 @@ public class FallingSquaresGame extends JFrame {
     private class Square {
         private int x;
         private int y;
-        private MouseAdapter mouseListener;
 
         public Square(int x, int y) {
             this.x = x;
             this.y = y;
-            this.mouseListener = new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (contains(e.getX(), e.getY())) {
-                        handleClick();
-                    }
-                }
-            };
-            gamePanel.addMouseListener(mouseListener);
         }
 
         public void draw(Graphics g) {
@@ -140,8 +141,6 @@ public class FallingSquaresGame extends JFrame {
             y += SQUARE_FALLING_SPEED;
             if (y + SQUARE_SIZE >= WINDOW_HEIGHT) {
                 squares.remove(this);
-                removeMouseListener();
-                updateScore();
             }
         }
 
@@ -149,34 +148,25 @@ public class FallingSquaresGame extends JFrame {
             return x >= this.x && x <= this.x + SQUARE_SIZE &&
                     y >= this.y && y <= this.y + SQUARE_SIZE;
         }
+    }
 
-        public void handleClick() {
-            List<Square> intersectingSquares = new ArrayList<>();
-            for (Square square : squares) {
-                if (square.contains(x + SQUARE_SIZE / 2, y + SQUARE_SIZE / 2)) {
-                    intersectingSquares.add(square);
-                }
-            }
-            if (!intersectingSquares.isEmpty()) {
-                Square newestSquare = intersectingSquares.get(intersectingSquares.size() - 1);
-                newestSquare.removeMouseListener();
-                squares.remove(newestSquare);
+    private void handleClick(int x, int y) {
+        Iterator<Square> iterator = squares.iterator();
+        while (iterator.hasNext()) {
+            Square square = iterator.next();
+            if (square.contains(x, y)) {
+                iterator.remove();
                 clickedSquares++;
                 updateScore();
+                break;
             }
         }
+    }
 
-
-
-        private void updateScore() {
-            score = ((double) clickedSquares / totalSquares) * 100.0;
-            scoreLabel.setText("Current score: " + String.format("%.1f", score) + "%");
-            gamePanel.repaint();
-        }
-
-        private void removeMouseListener() {
-            gamePanel.removeMouseListener(mouseListener);
-        }
+    private void updateScore() {
+        score = ((double) clickedSquares / totalSquares) * 100.0;
+        scoreLabel.setText("Current score: " + String.format("%.0f", score) + "%");
+        gamePanel.repaint();
     }
 
 
