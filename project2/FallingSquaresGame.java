@@ -16,25 +16,29 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class FallingSquaresGame extends JFrame {
 
     private JPanel gamePanel;
     private JLabel scoreLabel;
-    private List<Square> squares;
+    private ArrayList<Square> squares;
     private int totalSquares;
     private int clickedSquares;
     private double score;
+    private Timer gameTimer;
 
     private static final int WINDOW_WIDTH = 400;
     private static final int WINDOW_HEIGHT = 450;
-    private static final int SQUARE_SIZE = 40;
-    private static final int SQUARE_FALLING_SPEED = 15;
-    private static final int SQUARE_CREATION_INTERVAL = 1000; // FIXME
     private static final int GAME_DURATION_SECONDS = 30;
+    private static final int SQUARE_SIZE = 40;
+    private static final int SQUARE_FALLING_SPEED_PX = 4;
+    private static final double SQUARE_CREATION_INTERVAL_SECONDS = 0.1;
+    private static final int FPS = 60;
     private static final double REQUIRED_WINNING_SCORE_PERCENTAGE = 50.0;
 
-    public FallingSquaresGame() {
+    public FallingSquaresGame () {
         setTitle("Falling Squares Game");
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setResizable(false);
@@ -43,8 +47,9 @@ public class FallingSquaresGame extends JFrame {
         gamePanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                for (Square square : squares) {
+                g.setColor(Color.WHITE);
+                g.fillRect(0, 0, getWidth(), getHeight());
+                for (Square square: squares) {
                     square.draw(g);
                 }
             }
@@ -53,19 +58,16 @@ public class FallingSquaresGame extends JFrame {
         gamePanel.setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
         getContentPane().add(gamePanel, BorderLayout.CENTER);
 
-        scoreLabel = new JLabel("Current score: 0%");
+        scoreLabel = new JLabel("Current score: 100%");
         scoreLabel.setBorder(BorderFactory.createTitledBorder("Score"));
         scoreLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        getContentPane().add(scoreLabel, BorderLayout.SOUTH);
 
-        squares = new ArrayList<>();
-        score = 0.0;
-        clickedSquares = 0;
-        totalSquares = 0;
+        add(gamePanel, BorderLayout.CENTER);
+        add(scoreLabel, BorderLayout.SOUTH);
 
         gamePanel.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed (MouseEvent e) {
                 handleClick(e.getX(), e.getY());
             }
         });
@@ -75,22 +77,35 @@ public class FallingSquaresGame extends JFrame {
         playGame();
     }
 
-    private void playGame() {
-        long startTime = System.currentTimeMillis();
-        long endTime = startTime + (GAME_DURATION_SECONDS * 1000);
+    private void playGame () {
+        squares = new ArrayList<Square>();
+        score = 100.0;
+        clickedSquares = 0;
+        totalSquares = 0;
 
-        while (System.currentTimeMillis() < endTime) {
-            createNewSquare();
-            gamePanel.repaint();
-
-            try {
-                Thread.sleep(SQUARE_FALLING_SPEED);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        gameTimer = new Timer();
+        gameTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                createNewSquare();
             }
-        }
+        }, 0, (long)(SQUARE_CREATION_INTERVAL_SECONDS * 2000));
 
-        endGame();
+        gameTimer.schedule(new TimerTask() {
+            @Override
+            public void run () {
+                updateSquarePositions();
+                gamePanel.repaint();
+            }
+        }, 0, (long)(1000 / FPS));
+
+        Timer endTimer = new Timer();
+        endTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                endGame();
+            }
+        }, GAME_DURATION_SECONDS * 1000);
     }
 
     private void createNewSquare() {
@@ -98,28 +113,54 @@ public class FallingSquaresGame extends JFrame {
         Square newSquare = new Square(x, -SQUARE_SIZE);
         squares.add(newSquare);
         totalSquares++;
-        updateScore();
     }
 
-    private void endGame() {
-        String message;
-        if (score >= REQUIRED_WINNING_SCORE_PERCENTAGE) {
-            message = "Congratulations! You won!\nYour result is " + String.format("%.0f", score) + "%";
-        } else {
-            message = "Game over! You lost!\nYour result is " + String.format("%.0f", score) + "%";
+    private void updateSquarePositions () {
+        List<Square> squaresToRemove = new ArrayList<>();
+
+        for (Square square : squares) {
+            square.update();
+            if (square.getY() + SQUARE_SIZE >= WINDOW_HEIGHT) {
+                squaresToRemove.add(square);
+            }
         }
 
-        JButton okButton = new JButton("OK");
-        okButton.addActionListener(e -> System.exit(0));
-
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(okButton);
-
-        JOptionPane.showOptionDialog(this, message, "Game Over", JOptionPane.DEFAULT_OPTION,
-            JOptionPane.INFORMATION_MESSAGE, null, new Object[]{buttonPanel}, null);
+        if (squaresToRemove.size() > 0) {
+            squares.removeAll(squaresToRemove);
+            updateScore();
+        }
     }
 
-    private int getRandomNumber(int min, int max) {
+    private void endGame () {
+        gameTimer.cancel();
+
+        String message = "Your result is " + String.format("%.0f", score) + "%\n"
+          + "Missed squares count: " + (totalSquares - squares.size() - clickedSquares);
+
+        if (score >= REQUIRED_WINNING_SCORE_PERCENTAGE) {
+            message = "Congratulations! You won!\n" + message;
+        } else {
+            message = "Game over! You lost!\n" + message;
+        }
+
+        JButton playAgainButton = new JButton("Play Again");
+        playAgainButton.addActionListener(e -> {
+            dispose();
+            new FallingSquaresGame();
+        });
+        JButton exitButton = new JButton("Exit");
+        exitButton.addActionListener(e -> exitGame());
+
+        JOptionPane.showOptionDialog(this, message, "Game Over", JOptionPane.DEFAULT_OPTION,
+            JOptionPane.INFORMATION_MESSAGE, null, new Object[]{exitButton, playAgainButton}, null);
+    }
+
+    private void exitGame () {
+        gameTimer.purge();
+        System.exit(0);
+    }
+
+    private int getRandomNumber (int min, int max) {
         Random random = new Random();
         return random.nextInt(max - min + 1) + min;
     }
@@ -128,29 +169,33 @@ public class FallingSquaresGame extends JFrame {
         private int x;
         private int y;
 
-        public Square(int x, int y) {
+        public Square (int x, int y) {
             this.x = x;
             this.y = y;
         }
 
-        public void draw(Graphics g) {
+        public void draw (Graphics g) {
             g.setColor(Color.RED);
             g.fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
             g.setColor(Color.BLACK);
             g.drawRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
-            y += SQUARE_FALLING_SPEED;
-            if (y + SQUARE_SIZE >= WINDOW_HEIGHT) {
-                squares.remove(this);
-            }
         }
 
-        public boolean contains(int x, int y) {
+        public void update () {
+            y += SQUARE_FALLING_SPEED_PX;
+        }
+
+        public int getY () {
+            return y;
+        }
+
+        public boolean contains (int x, int y) {
             return x >= this.x && x <= this.x + SQUARE_SIZE &&
                     y >= this.y && y <= this.y + SQUARE_SIZE;
         }
     }
 
-    private void handleClick(int x, int y) {
+    private void handleClick (int x, int y) {
         Iterator<Square> iterator = squares.iterator();
         while (iterator.hasNext()) {
             Square square = iterator.next();
@@ -158,19 +203,20 @@ public class FallingSquaresGame extends JFrame {
                 iterator.remove();
                 clickedSquares++;
                 updateScore();
-                break;
+                return;
             }
         }
     }
 
-    private void updateScore() {
-        score = ((double) clickedSquares / totalSquares) * 100.0;
-        scoreLabel.setText("Current score: " + String.format("%.0f", score) + "%");
+    private void updateScore () {
+        score = ((double)(clickedSquares + squares.size()) / totalSquares) * 100.0;
+        String msg = "Current score: " + String.format("%.0f", score) + "%";
+        scoreLabel.setText(msg);
         gamePanel.repaint();
     }
 
 
-    public static void main(String[] args) {
+    public static void main (String[] args) {
         SwingUtilities.invokeLater(FallingSquaresGame::new);
     }
 }
