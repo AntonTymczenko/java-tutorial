@@ -6,5 +6,6 @@ CLASS-BOOK.md
 **/.*
 *.class
 project/archive
+project*/S*
 **/classes
 javafx-sdk-*
